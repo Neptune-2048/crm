@@ -1,5 +1,10 @@
 package com.zijing.crm.workbench.service.impl;
 
+import com.zijing.crm.settings.dao.UserDao;
+import com.zijing.crm.settings.domin.User;
+import com.zijing.crm.settings.service.UserService;
+import com.zijing.crm.settings.service.impl.UserServiceImpl;
+import com.zijing.crm.utils.ServiceFactory;
 import com.zijing.crm.utils.SqlSessionUtil;
 import com.zijing.crm.vo.PaginationVo;
 import com.zijing.crm.workbench.dao.ActivityDao;
@@ -8,12 +13,14 @@ import com.zijing.crm.workbench.domin.Activity;
 
 import com.zijing.crm.workbench.service.ActivityService;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ActivityServiceImpl implements ActivityService {
     private ActivityDao activityDao = SqlSessionUtil.getSqlSession().getMapper(ActivityDao.class);
     private ActivityRemarkDao activityRemark = SqlSessionUtil.getSqlSession().getMapper(ActivityRemarkDao.class);
+    private UserDao userDao = SqlSessionUtil.getSqlSession().getMapper(UserDao.class);
 
     public boolean save(Activity activity) {
         //打标记
@@ -54,6 +61,30 @@ public class ActivityServiceImpl implements ActivityService {
 
          //删除市场活动
         int count3 = activityDao.delete(ids);
+        return flag;
+    }
+
+    public Map<String, Object> getByid(String id) {
+        Map<String,Object> map = new HashMap<String, Object>();
+//      不能这样去查询User
+//        UserService us = (UserService) ServiceFactory.getService(new UserServiceImpl());
+//        List<User> list = us.getUserList();
+        List<User> list = userDao.getUserList();
+        for(User user : list){
+            System.out.println(user);
+        }
+        map.put("list",list);
+        //根据市场活动id查询市场活动信息
+        Activity activity = activityDao.getByid(id);
+        System.out.println(activity);
+        map.put("activity",activity);
+        return map;
+    }
+
+    public boolean update(Activity activity) {
+        boolean flag = false;
+        int i = activityDao.update(activity);
+        if (i==1) flag = true;
         return flag;
     }
 

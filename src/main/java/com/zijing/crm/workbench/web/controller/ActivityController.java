@@ -10,6 +10,7 @@ import com.zijing.crm.vo.PaginationVo;
 import com.zijing.crm.workbench.domin.Activity;
 import com.zijing.crm.workbench.service.ActivityService;
 import com.zijing.crm.workbench.service.impl.ActivityServiceImpl;
+import org.apache.ibatis.annotations.Update;
 import org.apache.taglibs.standard.tag.common.sql.DataSourceWrapper;
 
 import javax.servlet.ServletException;
@@ -37,6 +38,10 @@ public class ActivityController extends HttpServlet {
             pageList(request,response);
         }else if ("/workbench/activity/delete.do".equals(path)) {
             delete(request,response);
+        }else if("/workbench/activity/getUserListAndActivity.do".equals(path)){
+            getUserListAndActivity(request,response);
+        }else if ("/workbench/activity/update.do".equals(path)){
+            update(request,response);
         }
 
     }
@@ -119,6 +124,45 @@ public class ActivityController extends HttpServlet {
         boolean flag = as.delete(ids);
         PrintJson.printJsonFlag(response,flag);
 
+    }
+
+    private void getUserListAndActivity(HttpServletRequest request, HttpServletResponse response) {
+        String id = request.getParameter("id");
+        System.out.println(id);
+        //代理对象只能有一个，如果出现多个会出异常。
+        ActivityService as = (ActivityService) ServiceFactory.getService(new ActivityServiceImpl());
+        Map<String,Object> map = as.getByid(id);
+        PrintJson.printJsonObj(response,map);
+
+    }
+
+    private void update(HttpServletRequest request, HttpServletResponse response) {
+        //请求的参数
+        String id = request.getParameter("id");
+        String owner = request.getParameter("owner");
+        String name  = request.getParameter("name");
+        String startDate = request.getParameter("startDate");
+        String endDate = request.getParameter("endDate");
+        String cost = request.getParameter("cost");
+        String description =request.getParameter("description");
+        //获取修改时间，以及修改人
+        String editTime = DateTimeUtil.getSysTime();
+        String editBy = ((User) request.getSession().getAttribute("user")).getName();
+        //封装数据
+        Activity activity = new Activity();
+        activity.setId(id);
+        activity.setOwner(owner);
+        activity.setName(name);
+        activity.setStartDate(startDate);
+        activity.setEndDate(endDate);
+        activity.setCost(cost);
+        activity.setDescription(description);
+        activity.setEditTime(editTime);
+        activity.setEditBy(editBy);
+        //获取代理对象
+        ActivityService as = (ActivityService) ServiceFactory.getService(new ActivityServiceImpl());
+        boolean flag = as.update(activity);
+        PrintJson.printJsonFlag(response,flag);
     }
 
 

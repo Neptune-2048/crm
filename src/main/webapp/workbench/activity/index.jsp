@@ -123,37 +123,121 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 			if ($xz.length==0){
 				alert("请选择需要删除的记录")
 			}else {
-				var param ="";
-				for (var i=0;i < $xz.length;i++){
-					param += "id="+$($xz[i]).val();
-					if (i!=$xz.length-1){
-						param +="&";
-					}
-				}
-				$.ajax({
-					url : "workbench/activity/delete.do",
-					data : param,
-					type : "post",
-					dataType : "json",
-					success : function (data){
-						/*
-						* {"success":true/false}
-						* */
-						if (data.success){
-							pageList(1,2);
-							alert("删除成功")
-						}else {
-							alert("删除失败")
-						}
+			    if(confirm("您确定删除所选的记录吗？")){
+                    var param ="";
+                    for (var i=0;i < $xz.length;i++){
+                        param += "id="+$($xz[i]).val();
+                        if (i!=$xz.length-1){
+                            param +="&";
+                        }
+                    }
+                    $.ajax({
+                        url : "workbench/activity/delete.do",
+                        data : param,
+                        type : "post",
+                        dataType : "json",
+                        success : function (data){
+                            /*
+                            * {"success":true/false}
+                            * */
+                            if (data.success){
+                                pageList(1,2);
+                                alert("删除成功")
+                            }else {
+                                alert("删除失败")
+                            }
 
-					}
+                        }
 
-				})
+                    })
+
+                }
+
 
 			}
 
 		})
 
+		//为修改按钮绑定事件
+		$("#editBtn").click(function (){
+			//时间插件
+			$(".time").datetimepicker({
+				minView: "month",
+				language:  'zh-CN',
+				format: 'yyyy-mm-dd',
+				autoclose: true,
+				todayBtn: true,
+				pickerPosition: "bottom-left"
+			});
+
+			//根据复选框向后端查询所有者以及市场活动的信息
+			var $xz = $("input[name=xz]:checked");
+			if ($xz.length==0){
+				alert("请选择一条记录进行修改");
+			}else if ($xz.length > 1){
+				alert("只能选择一条记录进行修改");
+			}else {
+				$.ajax({
+					url : "workbench/activity/getUserListAndActivity.do",
+					data : {
+						"id" : $($xz[0]).val().trim(),
+					},
+					type : "post",
+					dataType : "json",
+					success : function (data){
+						// alert(data);
+						var html = ""
+						var owner;
+						$.each(data.list,function (i,n){
+							html +="<option value='"+n.id+"'>"+n.name+"</option>"
+						})
+						$("#edit-Owner").html(html);
+						//alert(owner);
+						$("#edit-Owner").val(data.activity.owner);
+						$("#edit-ActivityName").val(data.activity.name);
+						$("#edit-startDate").val(data.activity.startDate);
+						$("#edit-endDate").val(data.activity.endDate);
+						$("#edit-cost").val(data.activity.cost);
+						$("#edit-description").val(data.activity.description);
+
+					}
+
+				})
+				$("#editActivityModal").modal("show");
+			}
+
+		})
+
+		//为更新按钮绑定事件
+		$("#updateBtn").click(function (){
+			var $xz = $("input[name=xz]:checked");
+			$.ajax({
+				url : "workbench/activity/update.do",
+				type : "post",
+				data : {
+					"id" : $($xz[0]).val(),
+					"owner" : $("#edit-Owner").val(),
+					"name" : $("#edit-ActivityName").val(),
+					"startDate" : $("#edit-startDate").val(),
+					"endDate" : $("#edit-endDate").val(),
+					"cost" : $("#edit-cost").val(),
+					"description" : $("#edit-description").val()
+				},
+				dataType : "json",
+				success : function (data){
+						if (data.success){
+							alert("更新成功");
+							//刷新信息
+							pageList(1,2);
+							//关闭模态窗口
+							$("#editActivityModal").modal("hide");
+						}else {
+							alert("更新失败")
+						}
+				}
+
+			})
+		})
 	});
 	/*
 	* 对于所有的关系型数据库，做前端的分页相关的操作的基础组件
@@ -331,42 +415,40 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 					<form class="form-horizontal" role="form">
 					
 						<div class="form-group">
-							<label for="edit-marketActivityOwner" class="col-sm-2 control-label">所有者<span style="font-size: 15px; color: red;">*</span></label>
+							<label for="edit-Owner" class="col-sm-2 control-label">所有者<span style="font-size: 15px; color: red;">*</span></label>
 							<div class="col-sm-10" style="width: 300px;">
-								<select class="form-control" id="edit-marketActivityOwner">
-								  <option>zhangsan</option>
-								  <option>lisi</option>
-								  <option>wangwu</option>
+								<select class="form-control" id="edit-Owner">
+
 								</select>
 							</div>
-                            <label for="edit-marketActivityName" class="col-sm-2 control-label">名称<span style="font-size: 15px; color: red;">*</span></label>
+                            <label for="edit-ActivityName" class="col-sm-2 control-label">名称<span style="font-size: 15px; color: red;">*</span></label>
                             <div class="col-sm-10" style="width: 300px;">
-                                <input type="text" class="form-control" id="edit-marketActivityName" value="发传单">
+                                <input type="text" class="form-control" id="edit-ActivityName">
                             </div>
 						</div>
 
 						<div class="form-group">
-							<label for="edit-startTime" class="col-sm-2 control-label">开始日期</label>
+							<label for="edit-startDate" class="col-sm-2 control-label">开始日期</label>
 							<div class="col-sm-10" style="width: 300px;">
-								<input type="text" class="form-control" id="edit-startTime" value="2020-10-10">
+								<input type="text" class="form-control time" id="edit-startDate" >
 							</div>
-							<label for="edit-endTime" class="col-sm-2 control-label">结束日期</label>
+							<label for="edit-endDate" class="col-sm-2 control-label">结束日期</label>
 							<div class="col-sm-10" style="width: 300px;">
-								<input type="text" class="form-control" id="edit-endTime" value="2020-10-20">
+								<input type="text" class="form-control time" id="edit-endDate"  >
 							</div>
 						</div>
 						
 						<div class="form-group">
 							<label for="edit-cost" class="col-sm-2 control-label">成本</label>
 							<div class="col-sm-10" style="width: 300px;">
-								<input type="text" class="form-control" id="edit-cost" value="5,000">
+								<input type="text" class="form-control" id="edit-cost"  >
 							</div>
 						</div>
 						
 						<div class="form-group">
-							<label for="edit-describe" class="col-sm-2 control-label">描述</label>
+							<label for="edit-description" class="col-sm-2 control-label">描述</label>
 							<div class="col-sm-10" style="width: 81%;">
-								<textarea class="form-control" rows="3" id="edit-describe">市场活动Marketing，是指品牌主办或参与的展览会议与公关市场活动，包括自行主办的各类研讨会、客户交流会、演示会、新产品发布会、体验会、答谢会、年会和出席参加并布展或演讲的展览会、研讨会、行业交流会、颁奖典礼等</textarea>
+								<textarea class="form-control" rows="3" id="edit-description"></textarea>
 							</div>
 						</div>
 						
@@ -375,7 +457,7 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 				</div>
 				<div class="modal-footer">
 					<button type="button" class="btn btn-default" data-dismiss="modal">关闭</button>
-					<button type="button" class="btn btn-primary" data-dismiss="modal">更新</button>
+					<button type="button" class="btn btn-primary" id="updateBtn">更新</button>
 				</div>
 			</div>
 		</div>
@@ -432,7 +514,7 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 			<div class="btn-toolbar" role="toolbar" style="background-color: #F7F7F7; height: 50px; position: relative;top: 5px;">
 				<div class="btn-group" style="position: relative; top: 18%;">
 				  <button type="button" class="btn btn-primary" id="addBtn"><span class="glyphicon glyphicon-plus"></span> 创建</button>
-				  <button type="button" class="btn btn-default" data-toggle="modal" data-target="#editActivityModal"><span class="glyphicon glyphicon-pencil"></span> 修改</button>
+				  <button type="button" class="btn btn-default" id="editBtn"><span class="glyphicon glyphicon-pencil"></span> 修改</button>
 				  <button type="button" class="btn btn-danger" id="deleteBtn"><span class="glyphicon glyphicon-minus"></span> 删除</button>
 				</div>
 				
