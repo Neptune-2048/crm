@@ -36,6 +36,13 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 				todayBtn: true,
 				pickerPosition: "bottom-left"
 			});
+			//初始化模态窗口
+			$("#create-Owner").val("");//所有者
+			$("#create-name").val("");//市场活动名称
+			$("#create-startDate").val("");//开始日期
+			$("#create-endDate").val("");//结束日期
+			$("#create-cost").val("");//成本
+			 $("#create-description").val("");//描述
 
 			/*
 			* 	操作模态窗口的方式：
@@ -82,7 +89,14 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 					if (data.success){
 						alert("保存成功");
 						//关闭模态窗口
-						pageList(1,2);
+						// pageList(1,2);
+						/*
+						* pageList($("#activityPage").bs_pagination('getOption', 'currentPage')
+						*	,$("#activityPage").bs_pagination('getOption', 'rowsPerPage'));
+						* 第一个参数代表刷新页面是保持在原来的页面（比如第二页，就保持在第二页）
+						* 第二个参数代表刷新页面的记录条数的设计（比如我设计一页有5条记录，刷新之后还是保持页5条记录）
+						* */
+						pageList(1,$("#activityPage").bs_pagination('getOption', 'rowsPerPage'));
 						$("#createActivityModal").modal("hide");
 					}else {
 						alert("保存失败");
@@ -104,7 +118,8 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 			$("#hidden-startDate").val($("#search-startDate").val().trim());
 			$("#hidden-endDate").val($("#search-endDate").val().trim());
 
-			pageList(1,2);
+			//pageList(1,2);
+			pageList(1,$("#activityPage").bs_pagination('getOption', 'rowsPerPage'));
 		})
 
 		//为全选的复选框绑定事件，触发全选操作
@@ -141,7 +156,8 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
                             * {"success":true/false}
                             * */
                             if (data.success){
-                                pageList(1,2);
+                                //pageList(1,2);
+								pageList(1,$("#activityPage").bs_pagination('getOption', 'rowsPerPage'));
                                 alert("删除成功")
                             }else {
                                 alert("删除失败")
@@ -228,7 +244,9 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 						if (data.success){
 							alert("更新成功");
 							//刷新信息
-							pageList(1,2);
+							//pageList(1,2);
+							pageList($("#activityPage").bs_pagination('getOption', 'currentPage')
+									,$("#activityPage").bs_pagination('getOption', 'rowsPerPage'));
 							//关闭模态窗口
 							$("#editActivityModal").modal("hide");
 						}else {
@@ -293,7 +311,7 @@ String basePath = request.getScheme() + "://" + request.getServerName() + ":" + 
 
 					html +='<tr class="active">';
 					html +='<td><input type="checkbox" name="xz" value="'+n.id+'"/></td>';
-					html +='<td><a style="text-decoration: none; cursor: pointer;" onclick="window.location.href=\'workbench/activity/detail.jsp\';">'+n.name+'</a></td>'
+					html +='<td><a style="text-decoration: none; cursor: pointer;" onclick="window.location.href=\'workbench/activity/detail.do?id='+n.id+'\';">'+n.name+'</a></td>'
 					html +='<td>'+n.owner+'</td>';
 					html +='<td>'+n.startDate+'</td>';
 					html +='<td>'+n.endDate+'</td>';

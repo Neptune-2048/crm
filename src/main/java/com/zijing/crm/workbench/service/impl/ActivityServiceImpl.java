@@ -2,24 +2,20 @@ package com.zijing.crm.workbench.service.impl;
 
 import com.zijing.crm.settings.dao.UserDao;
 import com.zijing.crm.settings.domin.User;
-import com.zijing.crm.settings.service.UserService;
-import com.zijing.crm.settings.service.impl.UserServiceImpl;
-import com.zijing.crm.utils.ServiceFactory;
 import com.zijing.crm.utils.SqlSessionUtil;
 import com.zijing.crm.vo.PaginationVo;
 import com.zijing.crm.workbench.dao.ActivityDao;
 import com.zijing.crm.workbench.dao.ActivityRemarkDao;
 import com.zijing.crm.workbench.domin.Activity;
-
+import com.zijing.crm.workbench.domin.ActivityRemark;
 import com.zijing.crm.workbench.service.ActivityService;
-
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
 public class ActivityServiceImpl implements ActivityService {
     private ActivityDao activityDao = SqlSessionUtil.getSqlSession().getMapper(ActivityDao.class);
-    private ActivityRemarkDao activityRemark = SqlSessionUtil.getSqlSession().getMapper(ActivityRemarkDao.class);
+    private ActivityRemarkDao activityRemarkDao = SqlSessionUtil.getSqlSession().getMapper(ActivityRemarkDao.class);
     private UserDao userDao = SqlSessionUtil.getSqlSession().getMapper(UserDao.class);
 
     public boolean save(Activity activity) {
@@ -50,10 +46,10 @@ public class ActivityServiceImpl implements ActivityService {
         boolean flag = true;
 
         //查询出需要删除的备注的数量
-        int count1 = activityRemark.getCountByAids(ids);
+        int count1 = activityRemarkDao.getCountByAids(ids);
 
         //删除备注，返回受影响的条数（实际删除的数量）
-        int count2 = activityRemark.deleteByAids(ids);
+        int count2 = activityRemarkDao.deleteByAids(ids);
 
         if (count1!=count2){
             flag = false;
@@ -86,6 +82,40 @@ public class ActivityServiceImpl implements ActivityService {
         int i = activityDao.update(activity);
         if (i==1) flag = true;
         return flag;
+    }
+
+    public Activity detail(String id) {
+        Activity activity = activityDao.detail(id);
+        return activity;
+    }
+
+    public List<ActivityRemark> getRemarkListByAid(String id) {
+        List<ActivityRemark> list = activityRemarkDao.getRemarkListByAid(id);
+        return list;
+    }
+
+    public boolean deleteRemark(String id) {
+        boolean flag = false;
+        int i = activityRemarkDao.deleteRemarkById(id);
+        if (i==1) flag=true;
+        return flag;
+    }
+
+    public boolean saveRemark(ActivityRemark activityRemark) {
+        boolean flag = false;
+        int i = activityRemarkDao.saveRemark(activityRemark);
+        if (i==1) flag=true;
+        return flag;
+    }
+
+    public Map<String,Object> updateRemark(ActivityRemark activityRemark) {
+        Map<String,Object> map = new HashMap<String, Object>();
+        boolean flag = false;
+        int i = activityRemarkDao.updateRemark(activityRemark);
+        if (i==1) flag = true;
+        map.put("success",flag);
+        map.put("activityRemark",activityRemark);
+        return map;
     }
 
 

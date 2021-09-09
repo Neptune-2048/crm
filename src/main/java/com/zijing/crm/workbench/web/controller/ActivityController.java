@@ -8,6 +8,7 @@ import com.zijing.crm.settings.service.impl.UserServiceImpl;
 import com.zijing.crm.utils.*;
 import com.zijing.crm.vo.PaginationVo;
 import com.zijing.crm.workbench.domin.Activity;
+import com.zijing.crm.workbench.domin.ActivityRemark;
 import com.zijing.crm.workbench.service.ActivityService;
 import com.zijing.crm.workbench.service.impl.ActivityServiceImpl;
 import org.apache.ibatis.annotations.Update;
@@ -42,8 +43,17 @@ public class ActivityController extends HttpServlet {
             getUserListAndActivity(request,response);
         }else if ("/workbench/activity/update.do".equals(path)){
             update(request,response);
+        }else if ("/workbench/activity/detail.do".equals(path)){
+            detail(request,response);
+        }else if ("/workbench/activity/showRemarkList.do".equals(path)){
+            showRemarkList(request, response);
+        }else if ("/workbench/activity/deleteRemark.do".equals(path)){
+            deleteRemark(request, response);
+        }else if ("/workbench/activity/saveRemark.do".equals(path)){
+            saveRemark(request, response);
+        }else if ("/workbench/activity/updateRemark.do".equals(path)){
+            updateRemark(request, response);
         }
-
     }
 
     private void getUserList(HttpServletRequest request,HttpServletResponse response) {
@@ -165,5 +175,67 @@ public class ActivityController extends HttpServlet {
         PrintJson.printJsonFlag(response,flag);
     }
 
+    private void detail(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String id = request.getParameter("id");
+        ActivityService as = (ActivityService) ServiceFactory.getService(new ActivityServiceImpl());
+        Activity activity = as.detail(id);
+        request.setAttribute("activity",activity);
+        request.getRequestDispatcher("/workbench/activity/detail.jsp").forward(request,response);
+
+    }
+
+    private void showRemarkList(HttpServletRequest request, HttpServletResponse response) {
+        String id = request.getParameter("id");
+        ActivityService as = (ActivityService) ServiceFactory.getService(new ActivityServiceImpl());
+        List<ActivityRemark> list = as.getRemarkListByAid(id);
+        PrintJson.printJsonObj(response,list);
+    }
+
+    private void deleteRemark(HttpServletRequest request, HttpServletResponse response) {
+        String id = request.getParameter("id");
+        ActivityService as = (ActivityService) ServiceFactory.getService(new ActivityServiceImpl());
+        boolean flag = as.deleteRemark(id);
+        PrintJson.printJsonFlag(response,flag);
+    }
+
+    private void saveRemark(HttpServletRequest request, HttpServletResponse response) {
+        String id = UUIDUtil.getUUID();
+        String noteContent = request.getParameter("noteContent");
+        String createTime = DateTimeUtil.getSysTime();
+        String createBy = ((User)request.getSession().getAttribute("user")).getName();
+        String editFlag = "0";
+        String activityId = request.getParameter("activityId");
+        ActivityRemark activityRemark = new ActivityRemark();
+        activityRemark.setId(id);
+        activityRemark.setNoteContent(noteContent);
+        activityRemark.setCreateTime(createTime);
+        activityRemark.setCreateBy(createBy);
+        activityRemark.setEditFlag(editFlag);
+        activityRemark.setActivityId(activityId);
+
+        ActivityService as = (ActivityService) ServiceFactory.getService(new ActivityServiceImpl());
+        boolean flag = as.saveRemark(activityRemark);
+        Map map = new HashMap();
+        map.put("success",flag);
+        map.put("activityRemark",activityRemark);
+        PrintJson.printJsonObj(response,map);
+    }
+
+    private void updateRemark(HttpServletRequest request, HttpServletResponse response) {
+        String id = request.getParameter("id");
+        String noteContent = request.getParameter("noteContent");
+        String editBy = ((User)request.getSession().getAttribute("user")).getName();
+        String editTime = DateTimeUtil.getSysTime();
+        ActivityRemark activityRemark = new ActivityRemark();
+        activityRemark.setId(id);
+        activityRemark.setNoteContent(noteContent);
+        activityRemark.setEditBy(editBy);
+        activityRemark.setEditTime(editTime);
+        activityRemark.setEditFlag("1");
+
+        ActivityService as = (ActivityService) ServiceFactory.getService(new ActivityServiceImpl());
+        Map<String,Object> map = as.updateRemark(activityRemark);
+        PrintJson.printJsonObj(response,map);
+    }
 
 }
